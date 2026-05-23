@@ -1,0 +1,18 @@
+# binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# test binaries
+*.test
+
+# coverage
+*.out
+
+# IDE
+.vscode/
+
+# macOS
+.DS_Store
