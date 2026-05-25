@@ -19,13 +19,7 @@ func GenerateInsertSQL(oplog *model.Oplog) (string, error) {
 
 	for _, column := range columns {
 		value := oplog.O[column]
-
-		switch v := value.(type) {
-		case string:
-			values = append(values, fmt.Sprintf("'%s'", v))
-		default:
-			values = append(values, fmt.Sprintf("%v", v))
-		}
+		values = append(values, formatValue(value))
 	}
 
 	query := fmt.Sprintf(
@@ -36,4 +30,13 @@ func GenerateInsertSQL(oplog *model.Oplog) (string, error) {
 	)
 
 	return query, nil
+}
+
+func formatValue(value interface{}) string {
+	switch v := value.(type) {
+	case string:
+		return fmt.Sprintf("'%s'", v)
+	default:
+		return fmt.Sprintf("%v", v)
+	}
 }
