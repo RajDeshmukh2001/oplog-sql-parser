@@ -37,3 +37,113 @@ Every record in `oplog.rs` is a BSON document with these key fields:
 - `ns`: This indicates the namespace. Namespace consists of database and collection name separated by a `.` In above case, database name is `test` and collection name is `student`.
 
 - `o`: This indicates the new data for insert or update operation. In above case, a student document is inserted in the collection.
+
+## Project Structure
+
+```text
+oplog-sql-parser/
+│
+├── internal/
+│   ├── model/
+│   │   └── oplog.go
+│   │
+│   ├── parser/
+│   │   ├── oplog_parser.go
+│   │   └── oplog_parser_test.go
+│   │
+│   ├── sql/
+│   │   ├── insert.go
+│   │   └── insert_test.go
+│   │
+│   └── validator/
+│       ├── insert_validator.go
+│       └── insert_validator_test.go
+│
+├── .gitignore
+├── go.mod
+└── README.md
+```
+
+## How to Run the Code
+Since this project currently exposes reusable packages and does not include an executable entry point, you can create a temporary `main.go` file to verify the implementation manually.
+
+#### To manually verify the implementation:
+1. Create a temporary `main.go` file in the project root.
+2. Create a sample insert oplog JSON.
+3. Parse the oplog using `parser.ParseOplog`.
+4. Validate the oplog using `validator.ValidateInsertOplog`.
+5. Generate the SQL statement using `sql.GenerateInsertSQL`.
+6. Print the generated SQL statement to the console.
+
+The expected output should be a valid SQL `INSERT` statement corresponding to the provided oplog entry.
+
+#### Run
+
+```bash
+go run main.go
+```
+
+#### Expected output:
+
+```sql
+INSERT INTO test.student (_id, date_of_birth, is_graduated, name, roll_no)
+VALUES ('635b79e231d82a8ab1de863b', '2000-01-30', false, 'Selena Miller', 51);
+```
+
+## How to Run Tests
+#### Run all unit tests:
+
+```bash
+go test ./...
+```
+
+#### Run all tests with verbose output:
+
+```bash
+go test ./... -v
+```
+
+## Features
+
+**1. Parse Insert Oplog**
+
+Implemented support for parsing MongoDB insert oplogs and generating equivalent SQL INSERT statements.
+
+#### Supported Data Types
+
+The following MongoDB value types are currently supported:
+
+- String
+- Number
+- Boolean
+
+#### Assumptions
+
+- Only insert (`op = "i"`) oplogs are supported in this feature.
+- Nested JSON objects are not supported.
+- Arrays are not supported.
+- Dates are treated as strings.
+- Namespace (`ns`) follows the format `<database>.<collection>`.
+
+#### Example Input
+
+```json
+{
+  "op": "i",
+  "ns": "test.student",
+  "o": {
+    "_id": "635b79e231d82a8ab1de863b",
+    "name": "Selena Miller",
+    "roll_no": 51,
+    "is_graduated": false,
+    "date_of_birth": "2000-01-30"
+  }
+}
+```
+
+#### Example Output
+
+```sql
+INSERT INTO test.student (_id, date_of_birth, is_graduated, name, roll_no)
+VALUES ('635b79e231d82a8ab1de863b', '2000-01-30', false, 'Selena Miller', 51);
+```
