@@ -2,20 +2,14 @@ package sql
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/RajDeshmukh2001/oplog-sql-parser/internal/model"
 )
 
 func GenerateInsertSQL(oplog *model.Oplog) (string, error) {
-	var columns []string
 	var values []string
-
-	for column := range oplog.O {
-		columns = append(columns, column)
-	}
-	sort.Strings(columns)
+	columns := sortedKeys(oplog.O)
 
 	for _, column := range columns {
 		value := oplog.O[column]

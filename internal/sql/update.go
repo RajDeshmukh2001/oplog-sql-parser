@@ -13,8 +13,11 @@ func GenerateUpdateSQL(oplog *model.Oplog) (string, error) {
 	id := oplog.O2["_id"]
 
 	var assignments []string
+	columns := sortedKeys(updates)
 
-	for column, value := range updates {
+	for _, column := range columns {
+		value := updates[column]
+
 		assignments = append(
 			assignments,
 			fmt.Sprintf("%s = %s", column, formatValue(value)),
