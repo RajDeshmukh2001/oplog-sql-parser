@@ -2,6 +2,7 @@ package sql
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/RajDeshmukh2001/oplog-sql-parser/internal/model"
 )
@@ -11,19 +12,19 @@ func GenerateUpdateSQL(oplog *model.Oplog) (string, error) {
 	updates := diff["u"].(map[string]interface{})
 	id := oplog.O2["_id"]
 
-	var column string
-	var value interface{}
+	var assignments []string
 
-	for key, val := range updates {
-		column = key
-		value = val
+	for column, value := range updates {
+		assignments = append(
+			assignments,
+			fmt.Sprintf("%s = %s", column, formatValue(value)),
+		)
 	}
 
 	query := fmt.Sprintf(
-		"UPDATE %s SET %s = %s WHERE _id = %s;",
+		"UPDATE %s SET %s WHERE _id = %s;",
 		oplog.Ns,
-		column,
-		formatValue(value),
+		strings.Join(assignments, ", "),
 		formatValue(id),
 	)
 
