@@ -9,19 +9,32 @@ import (
 
 func GenerateUpdateSQL(oplog *model.Oplog) (string, error) {
 	diff := oplog.O["diff"].(map[string]interface{})
-	updates := diff["u"].(map[string]interface{})
 	id := oplog.O2["_id"]
 
 	var assignments []string
-	columns := sortedKeys(updates)
 
-	for _, column := range columns {
-		value := updates[column]
+	if updateFields, ok := diff["u"].(map[string]interface{}); ok {
+		columns := sortedKeys(updateFields)
 
-		assignments = append(
-			assignments,
-			fmt.Sprintf("%s = %s", column, formatValue(value)),
-		)
+		for _, column := range columns {
+			value := updateFields[column]
+
+			assignments = append(
+				assignments,
+				fmt.Sprintf("%s = %s", column, formatValue(value)),
+			)
+		}
+	}
+
+	if deleteFields, ok := diff["d"].(map[string]interface{}); ok {
+		columns := sortedKeys(deleteFields)
+
+		for _, column := range columns {
+			assignments = append(
+				assignments,
+				fmt.Sprintf("%s = NULL", column),
+			)
+		}
 	}
 
 	query := fmt.Sprintf(
