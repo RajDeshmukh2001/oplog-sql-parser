@@ -53,10 +53,16 @@ oplog-sql-parser/
 │   │
 │   ├── sql/
 │   │   ├── insert.go
-│   │   └── insert_test.go
+│   │   ├── insert_test.go
+│   │   ├── update.go
+│   │   ├── update_test.go
+│   │   ├── formatter.go
+│   │   └── helpers.go
 │   │
 │   └── validator/
 │       ├── insert_validator.go
+│       ├── insert_validator_test.go
+│       ├── update_validator.go
 │       └── insert_validator_test.go
 │
 ├── .gitignore
@@ -88,6 +94,29 @@ go run main.go
 ```sql
 INSERT INTO test.student (_id, date_of_birth, is_graduated, name, roll_no)
 VALUES ('635b79e231d82a8ab1de863b', '2000-01-30', false, 'Selena Miller', 51);
+```
+
+## PostgreSQL Setup for Manual Verification
+
+To manually verify the generated SQL statements, create the required schema and table in PostgreSQL using pgAdmin or psql.
+
+#### Create Schema
+
+```sql
+CREATE SCHEMA test;
+```
+
+#### Create Table
+
+```sql
+CREATE TABLE test.student
+(
+  _id           VARCHAR(255) PRIMARY KEY,
+  name          VARCHAR(255),
+  roll_no       FLOAT,
+  is_graduated  BOOLEAN,
+  date_of_birth VARCHAR(255)
+);
 ```
 
 ## How to Run Tests
@@ -146,4 +175,71 @@ The following MongoDB value types are currently supported:
 ```sql
 INSERT INTO test.student (_id, date_of_birth, is_graduated, name, roll_no)
 VALUES ('635b79e231d82a8ab1de863b', '2000-01-30', false, 'Selena Miller', 51);
+```
+
+---
+
+**2. Parse Update Oplog**
+
+Implemented support for parsing MongoDB update oplogs and generating equivalent SQL UPDATE statements.
+
+#### Supported Update Operations
+
+- Update field values using `diff.u`
+- Remove fields using `diff.d`
+
+#### Example Update Input
+
+```json
+{
+  "op": "u",
+  "ns": "test.student",
+  "o": {
+    "$v": 2,
+    "diff": {
+      "u": {
+        "is_graduated": true
+      }
+    }
+  },
+  "o2": {
+    "_id": "635b79e231d82a8ab1de863b"
+  }
+}
+```
+
+#### Example Update Output
+
+```sql
+UPDATE test.student
+SET is_graduated = true
+WHERE _id = '635b79e231d82a8ab1de863b';
+```
+
+#### Example Delete/Unset Input
+
+```json
+{
+  "op": "u",
+  "ns": "test.student",
+  "o": {
+    "$v": 2,
+    "diff": {
+      "d": {
+        "roll_no": false
+      }
+    }
+  },
+  "o2": {
+    "_id": "635b79e231d82a8ab1de863b"
+  }
+}
+```
+
+#### Example Delete/Unset Output
+
+```sql
+UPDATE test.student
+SET roll_no = NULL
+WHERE _id = '635b79e231d82a8ab1de863b';
 ```
