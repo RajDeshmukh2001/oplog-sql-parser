@@ -25,12 +25,3 @@ func GenerateInsertSQL(oplog *model.Oplog) (string, error) {
 
 	return query, nil
 }
-
-func formatValue(value interface{}) string {
-	switch v := value.(type) {
-	case string:
-		return fmt.Sprintf("'%s'", v)
-	default:
-		return fmt.Sprintf("%v", v)
-	}
-}
