@@ -243,3 +243,32 @@ UPDATE test.student
 SET roll_no = NULL
 WHERE _id = '635b79e231d82a8ab1de863b';
 ```
+
+---
+
+**3. Parse Delete Oplog**
+
+Implemented support for parsing MongoDB delete oplogs and generating equivalent SQL DELETE statements.
+
+#### Supported Delete Operation
+
+- Delete documents using `_id` as deletion criteria
+
+#### Example Input
+
+```json
+{
+  "op": "d",
+  "ns": "test.student",
+  "o": {
+    "_id": "635b79e231d82a8ab1de863b"
+  }
+}
+```
+
+#### Example Output
+
+```sql
+DELETE FROM test.student
+WHERE _id = '635b79e231d82a8ab1de863b';
+```
