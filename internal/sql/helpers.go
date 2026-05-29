@@ -13,3 +13,16 @@ func sortedKeys(data map[string]interface{}) []string {
 
 	return keys
 }
+
+func getColumnType(value interface{}) string {
+	switch value.(type) {
+	case string:
+		return "VARCHAR(255)"
+	case float64:
+		return "FLOAT"
+	case bool:
+		return "BOOLEAN"
+	default:
+		return "VARCHAR(255)"
+	}
+}
