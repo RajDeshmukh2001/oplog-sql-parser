@@ -38,50 +38,28 @@ Every record in `oplog.rs` is a BSON document with these key fields:
 
 - `o`: This indicates the new data for insert or update operation. In above case, a student document is inserted in the collection.
 
-## Project Structure
-
-```text
-oplog-sql-parser/
-│
-├── internal/
-│   ├── model/
-│   │   └── oplog.go
-│   │
-│   ├── parser/
-│   │   ├── oplog_parser.go
-│   │   └── oplog_parser_test.go
-│   │
-│   ├── sql/
-│   │   ├── insert.go
-│   │   ├── insert_test.go
-│   │   ├── update.go
-│   │   ├── update_test.go
-│   │   ├── formatter.go
-│   │   └── helpers.go
-│   │
-│   └── validator/
-│       ├── insert_validator.go
-│       ├── insert_validator_test.go
-│       ├── update_validator.go
-│       └── insert_validator_test.go
-│
-├── .gitignore
-├── go.mod
-└── README.md
-```
-
 ## How to Run the Code
 Since this project currently exposes reusable packages and does not include an executable entry point, you can create a temporary `main.go` file to verify the implementation manually.
 
 #### To manually verify the implementation:
 1. Create a temporary `main.go` file in the project root.
-2. Create a sample insert oplog JSON.
+2. Create a sample `insert`/`update`/`delete` oplog JSON.
 3. Parse the oplog using `parser.ParseOplog`.
-4. Validate the oplog using `validator.ValidateInsertOplog`.
-5. Generate the SQL statement using `sql.GenerateInsertSQL`.
+4. Validate the oplog: 
+    - If insert oplog use `validator.ValidateInsertOplog`
+    - If update oplog use `validator.ValidateUpdateOplog`
+    - If delete oplog use `validator.ValidateDeleteOplog`
+5. Generate the SQL statement(s):
+    - If insert oplog use `sql.GenerateInsertSQL`
+    - If update oplog use `sql.GenerateUpdateSQL`
+    - If delete oplog use `sql.GenerateDeleteSQL`
+    - For schema generation from insert oplogs use:
+      - `sql.GenerateCreateSchemaSQL`
+      - `sql.GenerateCreateTableSQL`
+      - `sql.GenerateInsertSQL`
 6. Print the generated SQL statement to the console.
 
-The expected output should be a valid SQL `INSERT` statement corresponding to the provided oplog entry.
+The expected output should be valid SQL statement(s) corresponding to the provided oplog entry and operation type.
 
 #### Run
 
@@ -271,4 +249,51 @@ Implemented support for parsing MongoDB delete oplogs and generating equivalent 
 ```sql
 DELETE FROM test.student
 WHERE _id = '635b79e231d82a8ab1de863b';
+```
+
+---
+
+**4. Create Schema and Table from Insert Oplog**
+
+Implemented support for generating PostgreSQL schema and table creation statements from a MongoDB insert oplog, along with the corresponding SQL INSERT statement.
+
+#### Type Mapping
+
+| MongoDB Value Type | PostgreSQL Column Type |
+|--------------------|------------------------|
+| String             | VARCHAR(255)           |
+| Number             | FLOAT                  |
+| Boolean            | BOOLEAN                |
+
+#### Example Input
+
+```json
+{
+  "op": "i",
+  "ns": "test.student",
+  "o": {
+    "_id": "635b79e231d82a8ab1de863b",
+    "name": "Selena Miller",
+    "roll_no": 51,
+    "is_graduated": false,
+    "date_of_birth": "2000-01-30"
+  }
+}
+```
+
+#### Example Output
+
+```sql
+CREATE SCHEMA test;
+
+CREATE TABLE test.student (
+    _id VARCHAR(255) PRIMARY KEY,
+    date_of_birth VARCHAR(255),
+    is_graduated BOOLEAN,
+    name VARCHAR(255),
+    roll_no FLOAT
+);
+
+INSERT INTO test.student (_id, date_of_birth, is_graduated, name, roll_no)
+VALUES ('635b79e231d82a8ab1de863b', '2000-01-30', false, 'Selena Miller', 51);
 ```
